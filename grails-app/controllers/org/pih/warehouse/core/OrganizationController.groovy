@@ -11,5 +11,5 @@ package org.pih.warehouse.core
 
 class OrganizationController {
 
-    def scaffold = Organization
+    static scaffold = Organization
 }
