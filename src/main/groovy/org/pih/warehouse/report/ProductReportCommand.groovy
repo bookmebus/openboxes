@@ -9,11 +9,12 @@
  **/
 package org.pih.warehouse.report
 
+import grails.validation.Validateable
 import org.pih.warehouse.core.Location
 import org.pih.warehouse.inventory.InventoryItem
 import org.pih.warehouse.product.Product
 
-class ProductReportCommand {
+class ProductReportCommand implements Validateable {
 
     Product product
     Location location

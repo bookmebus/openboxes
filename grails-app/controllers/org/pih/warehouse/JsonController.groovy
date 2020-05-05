@@ -11,6 +11,7 @@ package org.pih.warehouse
 
 import grails.converters.JSON
 import grails.gorm.transactions.Transactional
+import grails.validation.Validateable
 import groovy.time.TimeCategory
 import org.grails.web.json.JSONObject
 import org.pih.warehouse.jobs.CalculateHistoricalQuantityJob
@@ -1722,7 +1723,7 @@ class JsonController {
 }
 
 
-class InventorySnapshotCommand {
+class InventorySnapshotCommand implements Validateable {
 
     Date date
     Location location
@@ -1734,7 +1735,7 @@ class InventorySnapshotCommand {
 
 }
 
-class TransactionReportCommand {
+class TransactionReportCommand implements Validateable  {
     Date startDate
     Date endDate
     Location location
