@@ -109,8 +109,6 @@ class DashboardController {
 
     }
     def throwException() {
-        println "Configuration: " + Holders.getConfig().getProperty("grails")
-        println "Configuration: " + Holders.getConfig().getProperty("grails.mail")
         try {
             throw new RuntimeException("error of some kind")
         } catch (RuntimeException e) {
