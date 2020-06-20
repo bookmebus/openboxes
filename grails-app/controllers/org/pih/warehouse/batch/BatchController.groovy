@@ -70,13 +70,12 @@ class BatchController {
         }
     }
 
-
     def importData(ImportDataCommand command) {
 
         if ("POST".equals(request.getMethod())) {
-            MultipartFile localFile = null
+            def localFile = session.localFile
             if (request instanceof StandardMultipartHttpServletRequest) {
-                def uploadFile = request.getFile('importFile')
+                def uploadFile = command.importFile
                 if (!uploadFile?.empty) {
                     try {
                         localFile = uploadService.createLocalFile(uploadFile.originalFilename)
@@ -84,6 +83,7 @@ class BatchController {
                         session.localFile = localFile
 
                     } catch (Exception e) {
+                        log.error("Error uploading file" + e.message, e)
                         flash.message = "Unable to upload file due to exception: " + e.message
                         return
                     }
@@ -91,15 +91,10 @@ class BatchController {
                     flash.message = "${warehouse.message(code: 'inventoryItem.emptyFile.message')}"
                 }
             }
-            // Otherwise, we need to retrieve the file from the session
-            else {
-                localFile = session.localFile
-            }
 
             def dataImporter
             if (localFile) {
                 log.info "Local xls file " + localFile.getAbsolutePath()
-                command.importFile = localFile
                 command.filename = localFile.getAbsolutePath()
                 command.location = Location.get(session.warehouse.id)
                 try {
@@ -151,18 +146,13 @@ class BatchController {
                 }
 
                 if (dataImporter) {
-
-                    println "Using data importer ${dataImporter.class.name}"
-
                     // Get data from importer (should be done as a separate step 'processData' or within 'validateData')
                     command.data = dataImporter.data
 
                     // Validate data using importer (might change data)
                     dataImporter.validateData(command)
 
-                    //command.data = dataImporter.data
                     command.columnMap = dataImporter.columnMap
-
                 }
 
 
@@ -175,28 +165,23 @@ class BatchController {
                 }
 
                 // If there are no errors and the user requests to import the data, we should execute the import
-                if (!command.hasErrors() && params.import) {
-                    println "Data is about to be imported ..."
+                if (command.importNow) {
                     dataImporter.importData(command)
-
-                    println "Finished importing data"
-                    if (!command.errors.hasErrors()) {
-                        println "No errors"
+                    if (!command.hasErrors()) {
                         flash.message = "${warehouse.message(code: 'inventoryItem.importSuccess.message', args: [localFile.getAbsolutePath()])}"
+                        // Remove once import has been completed
+                        session.removeAttribute("localFile")
                         redirect(action: "importData")
                         return
                     }
-                    println "There were errors"
                 } else if (!command.hasErrors()) {
                     flash.message = "${warehouse.message(code: 'inventoryItem.dataReadyToBeImported.message')}"
                 }
-
-
-                render(view: "importData", model: [commandInstance: command])
             } else {
                 flash.message = "${warehouse.message(code: 'inventoryItem.notValidXLSFile.message')}"
             }
-
+            // Render data for user to review before proceeding
+            render(view: "importData", model: [commandInstance:command])
         }
     }
 
