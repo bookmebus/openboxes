@@ -32,6 +32,12 @@ class LocationService {
         }
     }
 
+    Location findByLocationNumber(String locationNumber) {
+        return Location.createCriteria().get {
+            eq("locationNumber", locationNumber)
+        }
+    }
+
     Location findOrCreateInternalLocation(String shipmentNumber, String locationNumber, LocationType locationType, Location parentLocation) {
         log.info "find or create internal location name=${shipmentNumber}, type=${locationType}"
         if (!shipmentNumber || !locationNumber || !locationType || !parentLocation) {
@@ -41,6 +47,9 @@ class LocationService {
         String name = getReceivingLocationName(shipmentNumber)
         String[] receivingLocationNames = [name, "Receiving ${shipmentNumber}"]
         Location location = findInternalLocation(parentLocation, receivingLocationNames)
+        if (!location) {
+            location = findByLocationNumber(locationNumber)
+        }
         if (!location) {
             log.info "creating internal location name=${name}, type=${locationType}"
             location = new Location()
